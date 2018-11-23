@@ -10,11 +10,11 @@ include ${OPENCV_ROOT}/sdk/native/jni/OpenCV.mk
 
 NDK_MODULE_PATH=C:/AndroidSDK/ndk-bundle
 LOCAL_ARM_NEON := true
-LOCAL_SRC_FILES := com_example_albertReed_simplecam_MainActivity.cpp
+LOCAL_SRC_FILES := com_example_albertReed_asuforiacppsupport_OpencvNativeClass.cpp
 LOCAL_CPPFLAGS := -std=gnu++0x
 LOCAL_CFLAGS += -O2
 LOCAL_LDLIBS += -llog -ldl
-LOCAL_MODULE := native
+LOCAL_MODULE := MyOpencvLibs
 
 include $(BUILD_SHARED_LIBRARY)
 

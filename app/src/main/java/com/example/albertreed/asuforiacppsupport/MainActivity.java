@@ -7,6 +7,7 @@ import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
@@ -18,9 +19,18 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SurfaceView;
 import android.view.WindowManager;
+import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
 
-public class MainActivity  extends Activity implements CvCameraViewListener2 {
+
+public class MainActivity  extends AppCompatActivity  implements CvCameraViewListener2 {
+
+    static {
+        System.loadLibrary("MyOpencvLibs");
+    }
+    Mat mRgba;
+    Mat mGray;
+
     private static final String TAG = "OCVSample::Activity";
 
     private CameraBridgeViewBase cv;
@@ -92,16 +102,29 @@ public class MainActivity  extends Activity implements CvCameraViewListener2 {
     }
 
     public void onCameraViewStarted(int width, int height) {
+        mRgba = new Mat(height, width, CvType.CV_8UC4);
+        mGray = new Mat(height, width, CvType.CV_8UC1);
 
     }
 
     public void onCameraViewStopped() {
-
+        mRgba.release();
+        mGray.release();
     }
 
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
-       return inputFrame.rgba();
+        mRgba = inputFrame.rgba();
+        OpencvNativeClass.convertGray(mRgba.getNativeObjAddr(), mGray.getNativeObjAddr());
+        return mGray;
     }
+
+   /* interface PoseListener() {
+        void onPose() {
+
+        }
+    }*/
+
+   // public static native int nativePoseEstimation();
 
 
 }
