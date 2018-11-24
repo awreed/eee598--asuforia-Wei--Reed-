@@ -23,7 +23,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
 
 
-public class MainActivity  extends AppCompatActivity  implements CvCameraViewListener2 {
+public class MainActivity  extends AppCompatActivity  implements CvCameraViewListener2, PoseListener {
 
     static {
         System.loadLibrary("MyOpencvLibs");
@@ -118,11 +118,10 @@ public class MainActivity  extends AppCompatActivity  implements CvCameraViewLis
         return mGray;
     }
 
-   /* interface PoseListener() {
-        void onPose() {
-
-        }
-    }*/
+    public void onPose()
+    {
+        //do stuff
+    }
 
    // public static native int nativePoseEstimation();
 

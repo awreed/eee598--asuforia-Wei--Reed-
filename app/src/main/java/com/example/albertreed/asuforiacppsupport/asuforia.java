@@ -1,10 +1,10 @@
 package com.example.albertreed.asuforiacppsupport;
 
-/*public class asuforia implements PoseListener{
 
-}
 
-public asuforia(PoseListener listener, Image refImage, Surface cameraSurface) {
+
+
+/*public asuforia(PoseListener listener, Image refImage, Surface cameraSurface) {
 
 
 }

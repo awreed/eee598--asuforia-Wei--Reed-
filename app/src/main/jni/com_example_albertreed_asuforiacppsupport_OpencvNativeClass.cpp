@@ -17,3 +17,11 @@ int toGray(Mat img, Mat& gray) {
     cvtColor(img, gray, CV_RGBA2GRAY);
     return 1;
 }
+
+JNIEXPORT jint JNICALL Java_com_example_albertreed_asuforiacppsupport_OpencvNativeClass_nativePoseEstimation
+    (JNIEnv *, jclass, jlong addrFrame){
+    Mat& frame = * (Mat *) addrFrame;
+
+
+
+    }
