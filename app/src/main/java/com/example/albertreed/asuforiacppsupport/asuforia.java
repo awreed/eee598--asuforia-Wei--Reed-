@@ -45,39 +45,42 @@ public class asuforia extends AppCompatActivity implements CvCameraViewListener2
     private CameraBridgeViewBase cv;
 
     private boolean startEstimation = false;
+    private boolean getRefImage = false;
 
     Mat frame;
+    Mat refImage;
 
 
     public asuforia(CameraBridgeViewBase cv) {
         this.cv = cv;
-        this.cv.setCvCameraViewListener(this);
-
-        //this.keypoints = OpencvNativeClass.getReferencePoints(image.getNativeObjAddr(), descriptors.getNativeObjAddr());
-        //this.kpMat.fromArray(keypoints);
-
+        this.cv.setCvCameraViewListener(this);//this class contains the callback
+        this.getRefImage = true;
     }
+
+
     /*uses boolean value to turn onCameraFrame callback on*/
     public void startEstimation() {
         this.startEstimation = true;
+
         this.cv.enableView();//this will call the onCameraViewStarted() callback
+
+        /*Save the keypoints of the reference image*/
+        this.keypoints = OpencvNativeClass.getReferencePoints(refImage.getNativeObjAddr(), descriptors.getNativeObjAddr());
+        this.kpMat.fromArray(keypoints);
     }
 
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {//same as onImageAvailable()
-        if(this.startEstimation) {
+        if(this.startEstimation == true) {
             frame = inputFrame.gray();
-            this.keypoints = OpencvNativeClass.testKeyPoints(frame.getNativeObjAddr());
-            this.kpMat.fromArray(this.keypoints);
-            //OpencvNativeClass.nativePoseEstimation(frame.getNativeObjAddr(), descriptors.getNativeObjAddr(), keypoints);
-            //listenerCallback.onPose();
-            Mat outputImage = new Mat();
-            Scalar color = new Scalar(0, 0, 255);
-            int flags = Features2d.DRAW_RICH_KEYPOINTS;
-            Features2d.drawKeypoints(frame, this.kpMat, outputImage, color, flags);
-            return outputImage;
-
+            OpencvNativeClass.nativePoseEstimation(frame.getNativeObjAddr(), descriptors.getNativeObjAddr(), keypoints);;
+            return frame;
+        } else if(this.getRefImage == true){
+            refImage = inputFrame.gray();
+            this.getRefImage = false;
+            startEstimation();//can start estimation now that we have reference image
+            return refImage;
         } else {
-            return null;
+            return null;//impossible
         }
     }
 
