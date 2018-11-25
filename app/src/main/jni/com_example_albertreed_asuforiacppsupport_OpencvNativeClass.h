@@ -10,6 +10,11 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/calib3d.hpp>
 #include <opencv2/video/tracking.hpp>
+#include <android/log.h>
+#include <string>
+
+#define LOG_TAG "FUCK"
+#define  LOGD(...)  __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
 
 
 using namespace cv;
@@ -25,14 +30,19 @@ extern "C" {
 
 int toGray(Mat img, Mat &Gray);
 
+void p(std::string s);
+
 JNIEXPORT jint JNICALL Java_com_example_albertreed_asuforiacppsupport_OpencvNativeClass_convertGray
   (JNIEnv *, jclass, jlong, jlong);
 
   JNIEXPORT jint JNICALL Java_com_example_albertreed_asuforiacppsupport_OpencvNativeClass_nativePoseEstimation
-    (JNIEnv *, jclass, jlong);
+    (JNIEnv *, jclass, jlong, jlong, jobjectArray);
 
-JNIEXPORT jint JNICALL Java_com_example_albertreed_asuforiacppsupport_OpencvNativeClass_getReferencePoints
-    (JNIEnv *, jclass, jlong);
+JNIEXPORT jobjectArray JNICALL Java_com_example_albertreed_asuforiacppsupport_OpencvNativeClass_getReferencePoints
+    (JNIEnv * env, jclass, jlong addrFrame, jlong descriptorsAddr);
+
+    JNIEXPORT jobjectArray JNICALL Java_com_example_albertreed_asuforiacppsupport_OpencvNativeClass_testKeyPoints
+        (JNIEnv * env, jclass, jlong addrFrame);
 
 #ifdef __cplusplus
 }
