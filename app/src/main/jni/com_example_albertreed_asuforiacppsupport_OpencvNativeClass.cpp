@@ -21,7 +21,19 @@ int toGray(Mat img, Mat& gray) {
 JNIEXPORT jint JNICALL Java_com_example_albertreed_asuforiacppsupport_OpencvNativeClass_nativePoseEstimation
     (JNIEnv *, jclass, jlong addrFrame){
     Mat& frame = * (Mat *) addrFrame;
+    return 0;
 
 
 
     }
+
+JNIEXPORT jint JNICALL Java_com_example_albertreed_asuforiacppsupport_OpencvNativeClass_getReferencePoints
+     (JNIEnv *, jclass, jlong addrFrame){
+     Mat& mOrb =  * (Mat *) addrFrame;
+     Ptr<ORB> orb = ORB::create();
+     vector<KeyPoint> keypoints;
+     Mat descriptors;
+     orb->detectAndCompute(mOrb, Mat(), keypoints, descriptors);
+     /*Now we need to keep going*/
+     return 1;
+}
