@@ -34,17 +34,17 @@ import java.util.Vector;
 public class asuforia extends AppCompatActivity implements CvCameraViewListener2 {
 
     public static void p(String s) {
-        Log.d("FUCK", s);
+        Log.d("MYPRINT", s);
 
     }
 
     KeyPoint[] keypoints;
-    Mat descriptors;
+    Mat descriptors = new Mat();
     MatOfKeyPoint kpMat = new MatOfKeyPoint();
 
     private CameraBridgeViewBase cv;
 
-    private boolean startEstimation = false;
+    private boolean estimating = false;
     private boolean getRefImage = false;
 
     Mat frame;
@@ -55,22 +55,22 @@ public class asuforia extends AppCompatActivity implements CvCameraViewListener2
         this.cv = cv;
         this.cv.setCvCameraViewListener(this);//this class contains the callback
         this.getRefImage = true;
+        this.cv.enableView();
     }
 
 
     /*uses boolean value to turn onCameraFrame callback on*/
     public void startEstimation() {
-        this.startEstimation = true;
+        this.estimating = true;
 
         this.cv.enableView();//this will call the onCameraViewStarted() callback
-
         /*Save the keypoints of the reference image*/
         this.keypoints = OpencvNativeClass.getReferencePoints(refImage.getNativeObjAddr(), descriptors.getNativeObjAddr());
         this.kpMat.fromArray(keypoints);
     }
 
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {//same as onImageAvailable()
-        if(this.startEstimation == true) {
+        if(this.estimating == true) {
             frame = inputFrame.gray();
             OpencvNativeClass.nativePoseEstimation(frame.getNativeObjAddr(), descriptors.getNativeObjAddr(), keypoints);;
             return frame;
@@ -89,16 +89,17 @@ public class asuforia extends AppCompatActivity implements CvCameraViewListener2
         if(this.cv != null) {
             this.cv.disableView();//this will call the onCameraViewStopped() callback
         }
-        this.startEstimation = false;
+        this.estimating = false;
     }
 
     public void onCameraViewStopped() {
         frame.release();
+        refImage.release();
     }
 
     public void onCameraViewStarted(int width, int height) {
         frame = new Mat(height, width, CvType.CV_8UC1);
-
+        refImage = new Mat(height, width, CvType.CV_8UC1);
 
     }
 

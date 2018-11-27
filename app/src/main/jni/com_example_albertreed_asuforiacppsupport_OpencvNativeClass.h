@@ -13,7 +13,8 @@
 #include <android/log.h>
 #include <string>
 
-#define LOG_TAG "FUCK"
+
+#define LOG_TAG "MYPRINT"
 #define  LOGD(...)  __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
 
 
@@ -41,8 +42,6 @@ JNIEXPORT jint JNICALL Java_com_example_albertreed_asuforiacppsupport_OpencvNati
 JNIEXPORT jobjectArray JNICALL Java_com_example_albertreed_asuforiacppsupport_OpencvNativeClass_getReferencePoints
     (JNIEnv * env, jclass, jlong addrFrame, jlong descriptorsAddr);
 
-    JNIEXPORT jobjectArray JNICALL Java_com_example_albertreed_asuforiacppsupport_OpencvNativeClass_testKeyPoints
-        (JNIEnv * env, jclass, jlong addrFrame);
 
 #ifdef __cplusplus
 }

@@ -70,11 +70,12 @@ public class MainActivity extends AppCompatActivity  implements PoseListener {
 
         ARmanager = new asuforia(cv);
 
-        ARmanager.startEstimation();
+        //ARmanager.startEstimation();
     }
 
     public void onPose()
     {
+
         //do stuff
     }
 
