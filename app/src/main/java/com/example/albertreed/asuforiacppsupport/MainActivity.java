@@ -3,6 +3,7 @@
 package com.example.albertreed.asuforiacppsupport;
 
 
+import org.opencv.android.Utils;
 import org.opencv.core.Mat;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.BaseLoaderCallback;
@@ -15,14 +16,18 @@ import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.photo.Photo;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.Image;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.Surface;
 import android.view.SurfaceView;
+import android.view.View;
 import android.view.WindowManager;
 import android.support.v7.app.AppCompatActivity;
+import android.widget.FrameLayout;
 
 import static com.example.albertreed.asuforiacppsupport.asuforia.p;
 
@@ -34,6 +39,9 @@ public class MainActivity extends AppCompatActivity  implements PoseListener {
     }
     Mat mRgba;
     Mat mGray;
+    Mat refImage = null;
+
+
 
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
@@ -41,6 +49,7 @@ public class MainActivity extends AppCompatActivity  implements PoseListener {
             switch(status) {
                 case LoaderCallbackInterface.SUCCESS:
                 {
+
                 } break;
                 default:
                 {
@@ -67,8 +76,17 @@ public class MainActivity extends AppCompatActivity  implements PoseListener {
         cv = (CameraBridgeViewBase) findViewById(R.id.main_activity_java_surface_view);
 
         cv.setVisibility(SurfaceView.VISIBLE);
+        org.opencv.android.JavaCameraView jcv = (org.opencv.android.JavaCameraView) findViewById(R.id.main_activity_java_surface_view);
+        jcv.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                asuforia.getRefImage = true;
+            }
+        });
+
 
         ARmanager = new asuforia(cv);
+
+
 
         //ARmanager.startEstimation();
     }

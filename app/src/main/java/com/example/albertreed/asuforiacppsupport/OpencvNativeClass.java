@@ -7,7 +7,7 @@ public class OpencvNativeClass {
 
     public native static int nativePoseEstimation(long addrFrame, long descriptorMat, KeyPoint[] Javakeypoints);
 
-    public native static KeyPoint[] getReferencePoints(long addrFrame, long descriptorsAddr);
+    public native static KeyPoint[] getReferencePoints(long addrFrame, long descriptorsAddr );
 
     public native static KeyPoint[] testKeyPoints(long addrFrame);
 }
