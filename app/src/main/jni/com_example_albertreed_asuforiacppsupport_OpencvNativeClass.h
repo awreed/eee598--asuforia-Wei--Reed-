@@ -36,8 +36,8 @@ void p(std::string s);
 JNIEXPORT jint JNICALL Java_com_example_albertreed_asuforiacppsupport_OpencvNativeClass_convertGray
   (JNIEnv *, jclass, jlong, jlong);
 
-  JNIEXPORT jint JNICALL Java_com_example_albertreed_asuforiacppsupport_OpencvNativeClass_nativePoseEstimation
-    (JNIEnv *, jclass, jlong, jlong, jlong, jlong, jobjectArray);
+  JNIEXPORT jobjectArray JNICALL Java_com_example_albertreed_asuforiacppsupport_OpencvNativeClass_nativePoseEstimation
+    (JNIEnv *, jclass, jlong, jlong, jlong, jlong, jobjectArray, jobjectArray);
 
 JNIEXPORT jobjectArray JNICALL Java_com_example_albertreed_asuforiacppsupport_OpencvNativeClass_getReferencePoints
     (JNIEnv * env, jclass, jlong addrFrame, jlong descriptorsAddr);

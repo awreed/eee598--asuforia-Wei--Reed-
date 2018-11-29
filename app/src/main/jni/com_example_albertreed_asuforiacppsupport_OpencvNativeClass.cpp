@@ -71,6 +71,18 @@ int ratioTest(std::vector<std::vector<cv::DMatch>> &matches) {
     return removed;
 }
 
+void jPoints2cPoints(jobjectArray jP, vector<Point3f>& model3D, JNIEnv * env) {
+    int size = env->GetArrayLength(jP);
+    jclass cls = env->FindClass("org/opencv/core/Point3");
+    jfieldID x = env->GetFieldID(cls, "x", "D");
+    jfieldID y = env->GetFieldID(cls, "y", "D");
+    jfieldID z = env->GetFieldID(cls, "z", "D");
+    for(int i = 0; i < size; i++) {
+        jobject pt = env->GetObjectArrayElement(jP, i);
+        model3D.push_back(Point3f(env->GetDoubleField(pt, x),env->GetDoubleField(pt, y),env->GetDoubleField(pt, z)));
+    }
+}
+
 void jArray2Vec(jobjectArray akp, vector<KeyPoint>& vkp, JNIEnv *env) {
 
       //  LOGD("j1");
@@ -121,7 +133,25 @@ void jArray2Vec(jobjectArray akp, vector<KeyPoint>& vkp, JNIEnv *env) {
 
             vkp.push_back(tmp_kp);
         }
+
 }
+
+jobjectArray pvec2jarray(vector<Point2f>& p2D, JNIEnv *env) {
+    jclass cls = env->FindClass("org/opencv/core/Point");
+
+    jmethodID midInit = env->GetMethodID(cls, "<init>", "(DD)V");
+
+    jobjectArray pointArray = env->NewObjectArray(p2D.size(), cls, NULL);
+
+    for(int i = 0; i < p2D.size(); i++) {
+        jobject p = env->NewObject(cls, midInit, p2D[i].x, p2D[i].y);
+        env->SetObjectArrayElement(pointArray, i, p);
+    }
+    return pointArray;
+
+}
+
+
 
 jobjectArray vec2jArray(vector<KeyPoint>& kp, JNIEnv *env) {
      jclass cls = env->FindClass("org/opencv/core/KeyPoint");
@@ -147,8 +177,8 @@ int checkPoints(vector<Point2f> &v) {
 
 
 
-JNIEXPORT jint JNICALL Java_com_example_albertreed_asuforiacppsupport_OpencvNativeClass_nativePoseEstimation
-    (JNIEnv * env, jclass, jlong addrFrame, jlong refFrame, jlong outFrame, jlong descriptorMat, jobjectArray Javakeypoints){
+JNIEXPORT jobjectArray JNICALL Java_com_example_albertreed_asuforiacppsupport_OpencvNativeClass_nativePoseEstimation
+    (JNIEnv * env, jclass, jlong addrFrame, jlong refFrame, jlong outFrame, jlong descriptorMat, jobjectArray Javakeypoints, jobjectArray points3D){
      Mat Amat = Mat::zeros(3, 3, CV_64FC1);
 
      double f = 2.95;
@@ -180,15 +210,14 @@ JNIEXPORT jint JNICALL Java_com_example_albertreed_asuforiacppsupport_OpencvNati
      vector<Point3f> model3D;
      vector<Point2f> model2D;
 
+     jPoints2cPoints(points3D, model3D, env);
+
 
      vector<KeyPoint> refKeypoints;
 
-     LOGD("1");
 
      jArray2Vec(Javakeypoints, refKeypoints, env);
-     LOGD("%f\n", refKeypoints[0].pt.x);
 
-     LOGD("2");
      Ptr<ORB> orb = ORB::create();
      Mat frameDescriptors;
      orb->detectAndCompute(frame, Mat(), frameKeypoints, frameDescriptors);
@@ -200,7 +229,7 @@ JNIEXPORT jint JNICALL Java_com_example_albertreed_asuforiacppsupport_OpencvNati
      BFMatcher matcher(NORM_L2);
      if(frameKeypoints.size() > 4) {
          matcher.knnMatch(refDescriptors, frameDescriptors, knnmatches, 2);
-     LOGD("4");
+
          for(size_t i = 0; i < knnmatches.size(); i++) {
             const DMatch& bestMatch = knnmatches[i][0];
             const DMatch& betterMatch = knnmatches[i][1];
@@ -209,12 +238,13 @@ JNIEXPORT jint JNICALL Java_com_example_albertreed_asuforiacppsupport_OpencvNati
                 matches.push_back(bestMatch);
             }
          }
-     LOGD("5");
+
          Mat rMat, rVec = Mat::zeros(3, 1, CV_64FC1);
          Mat tvec = Mat::zeros(3, 1, CV_64FC1);
 
+         jPoints2cPoints(points3D, model3D, env);
 
-     LOGD("6");
+
          for(unsigned int i = 0; i < matches.size(); ++i) {
             double x = refKeypoints[matches[i].queryIdx].pt.x;
             double y = refKeypoints[matches[i].queryIdx].pt.y;
@@ -229,68 +259,43 @@ JNIEXPORT jint JNICALL Java_com_example_albertreed_asuforiacppsupport_OpencvNati
             KpframeMatches2D.push_back(frameKeypoints[matches[i].trainIdx]);
          }
          drawKeypoints(frame, KpframeMatches2D, outImage);
-         //drawMatches(refImage, refMatches2D, frame, KpframeMatches2D, matches, outImage);
-     LOGD("7");
-         model3D.push_back(Point3f(0, 0, 0));
-         model3D.push_back(Point3f(100, 0, 0));
-         model3D.push_back(Point3f(0, 100, 0));
-         model3D.push_back(Point3f(100, 100.0, 0));
-         model3D.push_back(Point3f(0, 0, 100));
-         model3D.push_back(Point3f(100, 0, 100.0));
-         model3D.push_back(Point3f(0,100 , 100));
-         model3D.push_back(Point3f(100, 100.0,100));
-     LOGD("8");
+
+
          if(frameMatches2D.size() > 4) {
             solvePnP(refMatches3D, frameMatches2D, Amat, distCoeffs, rMat, tvec);
             Rodrigues(rMat, rVec);
 
             projectPoints(model3D, rVec, tvec, Amat, distCoeffs, model2D);
-            LOGD("%f\n", model2D[0].x);
-     LOGD("9");
-            if(checkPoints(model2D) == 1) {
-                line(outImage, model2D[0], model2D[1], CV_RGB(255,0,0), 2 );
-                line(outImage, model2D[0], model2D[2], CV_RGB(0,255,0), 2 );
-                line(outImage, model2D[2], model2D[3], CV_RGB(0,0,255), 2 );
-                line(outImage, model2D[3], model2D[1], CV_RGB(255,0,0), 2 );
 
-                line(outImage, model2D[4], model2D[5], CV_RGB(0,255,0), 2 );
-                line(outImage, model2D[4], model2D[6], CV_RGB(0,0,255), 2 );
-                line(outImage, model2D[6], model2D[7], CV_RGB(255,0,0), 2 );
-                line(outImage, model2D[7], model2D[5], CV_RGB(0,255,0), 2 );
-
-                line(outImage, model2D[2], model2D[6], CV_RGB(0,0,255), 2 );
-                line(outImage, model2D[3], model2D[7], CV_RGB(0,0,255), 2 );
-                line(outImage, model2D[1], model2D[5], CV_RGB(0,0,255), 2 );
-                line(outImage, model2D[0], model2D[4], CV_RGB(0,0,255), 2 );
+            if(frameKeypoints.size() > 0) {
+              frameKeypoints.clear();
+            }
+            if(refMatches3D.size() > 0) {
+              refMatches3D.clear();
+            }
+            if(refMatches2D.size() > 0) {
+              refMatches2D.clear();
+            }
+            if(frameMatches2D.size() > 0) {
+              frameMatches2D.clear();
+            }
+            if(KpframeMatches2D.size() > 0) {
+              KpframeMatches2D.clear();
+            }
+            if(matches.size() > 0) {
+              matches.clear();
             }
 
+            jobjectArray array = pvec2jarray(model2D, env);
+            return array;
          }
+
+         return NULL;
     }
-    if(frameKeypoints.size() > 0) {
-        frameKeypoints.clear();
-    }
-    if(refMatches3D.size() > 0) {
-        refMatches3D.clear();
-    }
-    if(refMatches2D.size() > 0) {
-        refMatches2D.clear();
-    }
-    if(frameMatches2D.size() > 0) {
-        frameMatches2D.clear();
-    }
-    if(KpframeMatches2D.size() > 0) {
-        KpframeMatches2D.clear();
-    }
-    if(model3D.size() > 0) {
-        model3D.clear();
-    }
-    if(model2D.size() > 0) {
-        model2D.clear();
-    }
-    if(matches.size() > 0) {
-        matches.clear();
-    }
-    return 0;
+
+    return NULL;
+
+
 }
 
 

@@ -12,8 +12,13 @@ import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.CvType;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
+import org.opencv.core.Point;
+import org.opencv.core.Point3;
+import org.opencv.core.Scalar;
+import org.opencv.imgproc.Imgproc;
 import org.opencv.photo.Photo;
 
 import android.graphics.Bitmap;
@@ -37,11 +42,6 @@ public class MainActivity extends AppCompatActivity  implements PoseListener {
     static {
         System.loadLibrary("MyOpencvLibs");
     }
-    Mat mRgba;
-    Mat mGray;
-    Mat refImage = null;
-
-
 
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
@@ -63,8 +63,22 @@ public class MainActivity extends AppCompatActivity  implements PoseListener {
 
     private CameraBridgeViewBase cv;
 
-
     asuforia ARmanager;
+
+
+    Point3[] model = new Point3[8];
+    double[] p1 = {0, 0, 0};
+    double[] p2 = {100, 0, 0};
+    double[] p3 = {0, 100, 0};
+    double[] p4 = {100, 100, 0};
+    double[] p5 = {0, 0, 100};
+    double[] p6 = {100, 0, 100};
+    double[] p7 = {0, 100, 100};
+    double[] p8 = {100, 100, 100};
+
+    Point[] model2D = new Point[16];
+
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -82,18 +96,49 @@ public class MainActivity extends AppCompatActivity  implements PoseListener {
                 asuforia.getRefImage = true;
             }
         });
+        for(int i = 0; i < model.length; i++) {
+            model[i] = new Point3();
+        }
+        for(int i = 0; i < model2D.length; i++) {
+            model2D[i] = new Point();
+        }
+        p("before model");
+        this.model[0].set(this.p1);
+        this.model[1].set(this.p2);
+        this.model[2].set(this.p3);
+        this.model[3].set(this.p4);
+        this.model[4].set(this.p5);
+        this.model[5].set(this.p6);
+        this.model[6].set(this.p7);
+        this.model[7].set(this.p8);
+
+        p("after model");
+
+        ARmanager = new asuforia(cv, model);
 
 
-        ARmanager = new asuforia(cv);
 
-
-
-        //ARmanager.startEstimation();
+        ARmanager.startEstimation();
     }
 
-    public void onPose()
+    public void onPose(Point[] p, Mat frame)
     {
+        p("hello on pose");
 
+        Imgproc.line(frame, p[0], p[1], new Scalar(255,0,0), 2 );
+        Imgproc.line(frame, p[0], p[2], new Scalar(0,255,0), 2 );
+        Imgproc.line(frame, p[2], p[3], new Scalar(0,0,255), 2 );
+        Imgproc.line(frame, p[3], p[1], new Scalar(255,0,0), 2 );
+
+        Imgproc.line(frame, p[4], p[5], new Scalar(0,255,0), 2 );
+        Imgproc.line(frame, p[4], p[6], new Scalar(0,0,255), 2 );
+        Imgproc.line(frame, p[6], p[7], new Scalar(255,0,0), 2 );
+        Imgproc.line(frame, p[7], p[5], new Scalar(0,255,0), 2 );
+
+        Imgproc.line(frame, p[2], p[6], new Scalar(0,0,255), 2 );
+        Imgproc.line(frame, p[3], p[7], new Scalar(0,0,255), 2 );
+        Imgproc.line(frame, p[1], p[5], new Scalar(0,0,255), 2 );
+        Imgproc.line(frame, p[0], p[4], new Scalar(0,0,255), 2 );
         //do stuff
     }
 
