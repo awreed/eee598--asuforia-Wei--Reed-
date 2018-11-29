@@ -136,6 +136,14 @@ jobjectArray vec2jArray(vector<KeyPoint>& kp, JNIEnv *env) {
      return keyPointArray;
 }
 
+int checkPoints(vector<Point2f> &v) {
+    for(int i = 0; i < v.size(); i++) {
+        if(v[i].x < 0 || v[i].x > 1280 || v[i].y <0 || v[i].y > 720) {
+            return 0;
+        }
+    }
+    return 1;
+}
 
 
 
@@ -156,7 +164,7 @@ JNIEXPORT jint JNICALL Java_com_example_albertreed_asuforiacppsupport_OpencvNati
      Amat.at<double>(1,2) = params[3];
      Amat.at<double>(2,2) = 1;
 
-     Mat distCoeffs = Mat::zeros(4, 1, DataType<double>::type);
+     Mat distCoeffs = Mat::zeros(8, 1, CV_32FC1);
 
      Mat& frame = * (Mat *) addrFrame;
      Mat& refDescriptors = * (Mat *) descriptorMat;
@@ -175,15 +183,16 @@ JNIEXPORT jint JNICALL Java_com_example_albertreed_asuforiacppsupport_OpencvNati
 
      vector<KeyPoint> refKeypoints;
 
-     //LOGD("1");
+     LOGD("1");
 
      jArray2Vec(Javakeypoints, refKeypoints, env);
+     LOGD("%f\n", refKeypoints[0].pt.x);
 
-     //LOGD("2");
+     LOGD("2");
      Ptr<ORB> orb = ORB::create();
      Mat frameDescriptors;
      orb->detectAndCompute(frame, Mat(), frameKeypoints, frameDescriptors);
-     //LOGD("3");
+     LOGD("3");
      const float minRatio = 1.f/2.f;
 
 
@@ -191,7 +200,7 @@ JNIEXPORT jint JNICALL Java_com_example_albertreed_asuforiacppsupport_OpencvNati
      BFMatcher matcher(NORM_L2);
      if(frameKeypoints.size() > 4) {
          matcher.knnMatch(refDescriptors, frameDescriptors, knnmatches, 2);
-         //LOGD("4");
+     LOGD("4");
          for(size_t i = 0; i < knnmatches.size(); i++) {
             const DMatch& bestMatch = knnmatches[i][0];
             const DMatch& betterMatch = knnmatches[i][1];
@@ -200,37 +209,61 @@ JNIEXPORT jint JNICALL Java_com_example_albertreed_asuforiacppsupport_OpencvNati
                 matches.push_back(bestMatch);
             }
          }
-         //LOGD("5");
-         Mat rvec = Mat::zeros(3, 1, CV_64FC1);
+     LOGD("5");
+         Mat rMat, rVec = Mat::zeros(3, 1, CV_64FC1);
          Mat tvec = Mat::zeros(3, 1, CV_64FC1);
 
 
-         //LOGD("6");
+     LOGD("6");
          for(unsigned int i = 0; i < matches.size(); ++i) {
             double x = refKeypoints[matches[i].queryIdx].pt.x;
             double y = refKeypoints[matches[i].queryIdx].pt.y;
             refMatches3D.push_back(Point3f(x, y, 0.0));
-            refMatches2D.push_back(refKeypoints[matches[i].queryIdx]);
-            Point2f tmp = frameKeypoints[matches[i].trainIdx].pt;
+            refMatches2D.push_back(refKeypoints[i]);
+            Point2f tmp;
+            tmp.x = frameKeypoints[matches[i].trainIdx].pt.x;
+            tmp.y = frameKeypoints[matches[i].trainIdx].pt.y;
+
+
             frameMatches2D.push_back(tmp);
             KpframeMatches2D.push_back(frameKeypoints[matches[i].trainIdx]);
          }
-           drawKeypoints(frame, KpframeMatches2D, frame);
+         drawKeypoints(frame, KpframeMatches2D, outImage);
          //drawMatches(refImage, refMatches2D, frame, KpframeMatches2D, matches, outImage);
-         //LOGD("7");
+     LOGD("7");
          model3D.push_back(Point3f(0, 0, 0));
-         model3D.push_back(Point3f(0, 0, 100.0));
-         model3D.push_back(Point3f(100.0, 0, 0));
-         model3D.push_back(Point3f(0, 100.0, 0));
-         //LOGD("8");
+         model3D.push_back(Point3f(100, 0, 0));
+         model3D.push_back(Point3f(0, 100, 0));
+         model3D.push_back(Point3f(100, 100.0, 0));
+         model3D.push_back(Point3f(0, 0, 100));
+         model3D.push_back(Point3f(100, 0, 100.0));
+         model3D.push_back(Point3f(0,100 , 100));
+         model3D.push_back(Point3f(100, 100.0,100));
+     LOGD("8");
          if(frameMatches2D.size() > 4) {
-            solvePnP(refMatches3D, frameMatches2D, Amat, distCoeffs, rvec, tvec);
+            solvePnP(refMatches3D, frameMatches2D, Amat, distCoeffs, rMat, tvec);
+            Rodrigues(rMat, rVec);
 
-            projectPoints(model3D, rvec, tvec, Amat, distCoeffs, model2D);
-            //LOGD("9");
-            line(frame, model2D[0], model2D[1], CV_RGB(255, 0, 0), 2);
-            line(frame, model2D[0], model2D[2], CV_RGB(255, 0, 0), 2);
-            line(frame, model2D[0], model2D[3], CV_RGB(255, 0, 0), 2);
+            projectPoints(model3D, rVec, tvec, Amat, distCoeffs, model2D);
+            LOGD("%f\n", model2D[0].x);
+     LOGD("9");
+            if(checkPoints(model2D) == 1) {
+                line(outImage, model2D[0], model2D[1], CV_RGB(255,0,0), 2 );
+                line(outImage, model2D[0], model2D[2], CV_RGB(0,255,0), 2 );
+                line(outImage, model2D[2], model2D[3], CV_RGB(0,0,255), 2 );
+                line(outImage, model2D[3], model2D[1], CV_RGB(255,0,0), 2 );
+
+                line(outImage, model2D[4], model2D[5], CV_RGB(0,255,0), 2 );
+                line(outImage, model2D[4], model2D[6], CV_RGB(0,0,255), 2 );
+                line(outImage, model2D[6], model2D[7], CV_RGB(255,0,0), 2 );
+                line(outImage, model2D[7], model2D[5], CV_RGB(0,255,0), 2 );
+
+                line(outImage, model2D[2], model2D[6], CV_RGB(0,0,255), 2 );
+                line(outImage, model2D[3], model2D[7], CV_RGB(0,0,255), 2 );
+                line(outImage, model2D[1], model2D[5], CV_RGB(0,0,255), 2 );
+                line(outImage, model2D[0], model2D[4], CV_RGB(0,0,255), 2 );
+            }
+
          }
     }
     if(frameKeypoints.size() > 0) {

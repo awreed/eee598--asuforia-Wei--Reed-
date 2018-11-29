@@ -95,11 +95,9 @@ public class asuforia extends AppCompatActivity implements CvCameraViewListener2
             //p("estimating");
             p("estimating");
             frame = inputFrame.gray();
-            p(Integer.toString(frame.width()));
-            p(Integer.toString(frame.height()));
             outFrame = inputFrame.rgba();
-            //OpencvNativeClass.nativePoseEstimation(frame.getNativeObjAddr(), refImage.getNativeObjAddr(), outFrame.getNativeObjAddr(), descriptors.getNativeObjAddr(), keypoints);;
-            return frame;
+            OpencvNativeClass.nativePoseEstimation(frame.getNativeObjAddr(), refImage.getNativeObjAddr(), outFrame.getNativeObjAddr(), descriptors.getNativeObjAddr(), keypoints);;
+            return outFrame;
         }
         if(this.getRefImage == true) {
             p("getRefImage");
