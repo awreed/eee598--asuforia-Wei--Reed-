@@ -5,7 +5,7 @@ import org.opencv.core.KeyPoint;
 public class OpencvNativeClass {
     public native static int convertGray(long matAddrRgba, long mat);
 
-    public native static int nativePoseEstimation(long addrFrame, long descriptorMat, KeyPoint[] Javakeypoints);
+    public native static int nativePoseEstimation(long addrFrame, long refFrame, long outFrame, long descriptorMat, KeyPoint[] Javakeypoints);
 
     public native static KeyPoint[] getReferencePoints(long addrFrame, long descriptorsAddr );
 

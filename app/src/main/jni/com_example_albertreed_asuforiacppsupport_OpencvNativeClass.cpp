@@ -140,105 +140,123 @@ jobjectArray vec2jArray(vector<KeyPoint>& kp, JNIEnv *env) {
 
 
 JNIEXPORT jint JNICALL Java_com_example_albertreed_asuforiacppsupport_OpencvNativeClass_nativePoseEstimation
-    (JNIEnv * env, jclass, jlong addrFrame, jlong descriptorMat, jobjectArray Javakeypoints){
+    (JNIEnv * env, jclass, jlong addrFrame, jlong refFrame, jlong outFrame, jlong descriptorMat, jobjectArray Javakeypoints){
+     Mat Amat = Mat::zeros(3, 3, CV_64FC1);
 
-       LOGD("a");
-       double f = 55;                           // focal length in mm
-       double sx = 22.3, sy = 14.9;             // sensor size
-       double width = 1280, height = 720;        // image size
-       double params[] = { width*f/sx,   // fx
-                              height*f/sy,  // fy
-                              width/2,      // cx
-                              height/2};    // cy
-       int iterationsCount = 500;      // number of Ransac iterations.
-       float reprojectionError = 2.0;  // maximum allowed distance to consider it an inlier.
-       double confidence = 0.95;        // ransac successful confidence.
-       int pnpMethod = SOLVEPNP_ITERATIVE;
-       bool useExtrinsicGuess = false;
-       Mat inliers_idx;
-       Mat distCoeffs = Mat::zeros(4, 1, CV_64FC1);    // vector of distortion coefficients
-       Mat rvec = Mat::zeros(3, 1, CV_64FC1);          // output rotation vector
-       Mat tvec = Mat::zeros(3, 1, CV_64FC1);          // output translation vector
-       Mat _A_matrix = Mat::zeros(3, 3, CV_64FC1);   // intrinsic camera parameters
-       _A_matrix.at<double>(0, 0) = params[0];       //      [ fx   0  cx ]
-       _A_matrix.at<double>(1, 1) = params[1];       //      [  0  fy  cy ]
-       _A_matrix.at<double>(0, 2) = params[2];       //      [  0   0   1 ]
-       _A_matrix.at<double>(1, 2) = params[3];
-       _A_matrix.at<double>(2, 2) = 1;
-       LOGD("b");
-   // pnp ///
+     double f = 2.95;
+     double sx = 3.67, sy = 2.74;
+     double width = 1280, height = 720;
+     double params[] = {width * f/sx,
+                        height * f/sy,
+                        width/2,
+                        height/2};
+     Amat.at<double>(0,0) = params[0];
+     Amat.at<double>(1,1) = params[1];
+     Amat.at<double>(0,2) = params[2];
+     Amat.at<double>(1,2) = params[3];
+     Amat.at<double>(2,2) = 1;
 
-       Mat& frame = * (Mat *) addrFrame;
-       //LOGD("b1");
-       Mat& refDescriptors = * (Mat *) descriptorMat;
-       //LOGD("b2");
-       int size = env->GetArrayLength(Javakeypoints);
-       LOGD("ba");
-       vector<KeyPoint> keypoints(size);
-       LOGD("ba1");
-       jArray2Vec(Javakeypoints, keypoints, env);
-       LOGD("ba2");
-       Ptr<ORB> orb = ORB::create();
-       LOGD("baa");
-       vector<KeyPoint> frameKeypoints;
-       Mat newDescriptors;
-       orb->detectAndCompute(frame, Mat(), frameKeypoints, newDescriptors);
-       LOGD("b3");
-       BFMatcher matcher(NORM_L2);
-       vector<DMatch> matches;
-       matcher.match(refDescriptors, newDescriptors, matches);
-       LOGD("b4");
-       vector<Point2f> list_points3d_model_match; // container for the model 3D coordinates found in the scene
-       vector<Point2f> list_points2d_scene_match; // container for the model 2D coordinates found in the scene
-       vector<Point2f> imageFramePoints;
-   	vector<Point3d> framePoints;
-       LOGD("C");
-       LOGD("matches size is %lu\n", matches.size());
-       for(unsigned int match_index = 0; match_index < matches.size(); ++match_index)
-           {
-             Point2f point3d_model = keypoints[ matches[match_index].queryIdx ].pt;  // 3D point from model
-             Point2f point2d_scene = frameKeypoints[ matches[match_index].queryIdx ].pt; // 2D point from the scene
-             list_points3d_model_match.push_back(point3d_model);         // add 3D point
-             list_points2d_scene_match.push_back(point2d_scene);         // add 2D point
-           }
+     Mat distCoeffs = Mat::zeros(4, 1, DataType<double>::type);
 
-       if(matches.size() >= 4) // OpenCV requires solvePnPRANSAC to minimally have 4 set of points
-           {
-             // Estimate the pose using RANSAC approach
-            solvePnPRansac( list_points3d_model_match, list_points2d_scene_match, _A_matrix, distCoeffs, rvec, tvec,useExtrinsicGuess, iterationsCount, reprojectionError, confidence,inliers_idx, pnpMethod );
-           }
-           LOGD("d");
-   	framePoints.push_back( Point3d( 0.0, 0.0, 0.0 ) );
-   	framePoints.push_back( Point3d( 5.0, 0.0, 0.0 ) );
-   	framePoints.push_back( Point3d( 0.0, 5.0, 0.0 ) );
-   	framePoints.push_back( Point3d( 5.0, 5.0, 0.0 ) );
-       framePoints.push_back( Point3d( 0.0, 0.0, 5.0 ) );
-       framePoints.push_back( Point3d( 5.0, 0.0, 5.0 ) );
-       framePoints.push_back( Point3d( 0.0, 5.0, 5.0 ) );
-       framePoints.push_back( Point3d( 5.0, 5.0, 5.0 ) );
-       LOGD("e");
-   	projectPoints(framePoints, rvec, tvec, _A_matrix, distCoeffs, imageFramePoints );
-   	LOGD("f");
-   	line(frame, imageFramePoints[0], imageFramePoints[1], CV_RGB(255,0,0), 2 );
-   	line(frame, imageFramePoints[0], imageFramePoints[2], CV_RGB(0,255,0), 2 );
-   	line(frame, imageFramePoints[2], imageFramePoints[3], CV_RGB(0,0,255), 2 );
-   	line(frame, imageFramePoints[3], imageFramePoints[1], CV_RGB(255,0,0), 2 );
-
-       line(frame, imageFramePoints[4], imageFramePoints[5], CV_RGB(0,255,0), 2 );
-       line(frame, imageFramePoints[4], imageFramePoints[6], CV_RGB(0,0,255), 2 );
-       line(frame, imageFramePoints[6], imageFramePoints[7], CV_RGB(255,0,0), 2 );
-       line(frame, imageFramePoints[7], imageFramePoints[5], CV_RGB(0,255,0), 2 );
-
-       line(frame, imageFramePoints[2], imageFramePoints[6], CV_RGB(0,0,255), 2 );
-       line(frame, imageFramePoints[3], imageFramePoints[7], CV_RGB(0,0,255), 2 );
-       line(frame, imageFramePoints[1], imageFramePoints[5], CV_RGB(0,0,255), 2 );
-       line(frame, imageFramePoints[0], imageFramePoints[4], CV_RGB(0,0,255), 2 );
+     Mat& frame = * (Mat *) addrFrame;
+     Mat& refDescriptors = * (Mat *) descriptorMat;
+     Mat& refImage = * (Mat *) refFrame;
+     Mat& outImage = * (Mat *) outFrame;
+     vector<Point3f> refMatches3D;
+     vector<KeyPoint> refMatches2D;
+     vector<Point2f> frameMatches2D;
+     vector<KeyPoint> KpframeMatches2D;
+     vector<vector<DMatch>> knnmatches;
+     vector<DMatch> matches;
+     vector<KeyPoint> frameKeypoints;
+     vector<Point3f> model3D;
+     vector<Point2f> model2D;
 
 
-        LOGD("g");
+     vector<KeyPoint> refKeypoints;
+
+     //LOGD("1");
+
+     jArray2Vec(Javakeypoints, refKeypoints, env);
+
+     //LOGD("2");
+     Ptr<ORB> orb = ORB::create();
+     Mat frameDescriptors;
+     orb->detectAndCompute(frame, Mat(), frameKeypoints, frameDescriptors);
+     //LOGD("3");
+     const float minRatio = 1.f/2.f;
 
 
-   // symmetryTest(matches12, matches21, good_matches);
+
+     BFMatcher matcher(NORM_L2);
+     if(frameKeypoints.size() > 4) {
+         matcher.knnMatch(refDescriptors, frameDescriptors, knnmatches, 2);
+         //LOGD("4");
+         for(size_t i = 0; i < knnmatches.size(); i++) {
+            const DMatch& bestMatch = knnmatches[i][0];
+            const DMatch& betterMatch = knnmatches[i][1];
+            float distanceRatio = bestMatch.distance/betterMatch.distance;
+            if(distanceRatio < minRatio) {
+                matches.push_back(bestMatch);
+            }
+         }
+         //LOGD("5");
+         Mat rvec = Mat::zeros(3, 1, CV_64FC1);
+         Mat tvec = Mat::zeros(3, 1, CV_64FC1);
+
+
+         //LOGD("6");
+         for(unsigned int i = 0; i < matches.size(); ++i) {
+            double x = refKeypoints[matches[i].queryIdx].pt.x;
+            double y = refKeypoints[matches[i].queryIdx].pt.y;
+            refMatches3D.push_back(Point3f(x, y, 0.0));
+            refMatches2D.push_back(refKeypoints[matches[i].queryIdx]);
+            Point2f tmp = frameKeypoints[matches[i].trainIdx].pt;
+            frameMatches2D.push_back(tmp);
+            KpframeMatches2D.push_back(frameKeypoints[matches[i].trainIdx]);
+         }
+           drawKeypoints(frame, KpframeMatches2D, frame);
+         //drawMatches(refImage, refMatches2D, frame, KpframeMatches2D, matches, outImage);
+         //LOGD("7");
+         model3D.push_back(Point3f(0, 0, 0));
+         model3D.push_back(Point3f(0, 0, 100.0));
+         model3D.push_back(Point3f(100.0, 0, 0));
+         model3D.push_back(Point3f(0, 100.0, 0));
+         //LOGD("8");
+         if(frameMatches2D.size() > 4) {
+            solvePnP(refMatches3D, frameMatches2D, Amat, distCoeffs, rvec, tvec);
+
+            projectPoints(model3D, rvec, tvec, Amat, distCoeffs, model2D);
+            //LOGD("9");
+            line(frame, model2D[0], model2D[1], CV_RGB(255, 0, 0), 2);
+            line(frame, model2D[0], model2D[2], CV_RGB(255, 0, 0), 2);
+            line(frame, model2D[0], model2D[3], CV_RGB(255, 0, 0), 2);
+         }
+    }
+    if(frameKeypoints.size() > 0) {
+        frameKeypoints.clear();
+    }
+    if(refMatches3D.size() > 0) {
+        refMatches3D.clear();
+    }
+    if(refMatches2D.size() > 0) {
+        refMatches2D.clear();
+    }
+    if(frameMatches2D.size() > 0) {
+        frameMatches2D.clear();
+    }
+    if(KpframeMatches2D.size() > 0) {
+        KpframeMatches2D.clear();
+    }
+    if(model3D.size() > 0) {
+        model3D.clear();
+    }
+    if(model2D.size() > 0) {
+        model2D.clear();
+    }
+    if(matches.size() > 0) {
+        matches.clear();
+    }
     return 0;
 }
 

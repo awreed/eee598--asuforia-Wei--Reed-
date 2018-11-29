@@ -63,6 +63,7 @@ public class asuforia extends AppCompatActivity implements CvCameraViewListener2
 
     Mat frame;
     Mat refImage;
+    Mat outFrame;
     Mat refImageGray = new Mat();
     Mat testFrame;
 
@@ -71,6 +72,7 @@ public class asuforia extends AppCompatActivity implements CvCameraViewListener2
     public asuforia(CameraBridgeViewBase cv) {
         this.cv = cv;
         this.cv.setCvCameraViewListener(this);//this class contains the callback
+        p("constructor");
         cv.enableView();
     }
 
@@ -81,30 +83,34 @@ public class asuforia extends AppCompatActivity implements CvCameraViewListener2
     public void startEstimation() {
 
         /*Save the keypoints of the reference image*/
-        p("1");
+        p("A");
         this.keypoints = OpencvNativeClass.getReferencePoints(this.refImage.getNativeObjAddr(), descriptors.getNativeObjAddr());
         this.kpMat.fromArray(keypoints);
-        p("here");
+        p("B");
         this.estimating = true;
     }
 
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {//same as onImageAvailable()
         if(this.estimating == true) {
             //p("estimating");
+            p("estimating");
             frame = inputFrame.gray();
-            OpencvNativeClass.nativePoseEstimation(frame.getNativeObjAddr(), descriptors.getNativeObjAddr(), keypoints);;
+            p(Integer.toString(frame.width()));
+            p(Integer.toString(frame.height()));
+            outFrame = inputFrame.rgba();
+            //OpencvNativeClass.nativePoseEstimation(frame.getNativeObjAddr(), refImage.getNativeObjAddr(), outFrame.getNativeObjAddr(), descriptors.getNativeObjAddr(), keypoints);;
             return frame;
         }
         if(this.getRefImage == true) {
-            //p("getRefImage");
+            p("getRefImage");
             this.refImage = inputFrame.gray();
             this.getRefImage = false;
             startEstimation();
             return refImage;
         }
-        //p("1");
+        p("onCameraFrame");
         frame = inputFrame.rgba();
-        //p("2");
+        p("after frame");
         return frame;
     }
 
@@ -119,11 +125,17 @@ public class asuforia extends AppCompatActivity implements CvCameraViewListener2
     public void onCameraViewStopped() {
         frame.release();
         refImage.release();
+        outFrame.release();
     }
 
     public void onCameraViewStarted(int width, int height) {
+        p("onstarted");
+        p(Integer.toString(width));
+        p(Integer.toString(height));
+
         frame = new Mat(height, width, CvType.CV_8UC1);
         refImage = new Mat(height, width, CvType.CV_8UC1);
+        outFrame = new Mat(height, width, CvType.CV_8UC4);
 
     }
 
