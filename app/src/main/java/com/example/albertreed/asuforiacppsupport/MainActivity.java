@@ -154,6 +154,15 @@ public class MainActivity extends AppCompatActivity  implements PoseListener {
         //do stuff
     }
 
+    public void onPause() {/*end estimation on pause*/
+        super.onPause();
+        ARmanager.endEstimation();
+    }
+
+    public void onResume() {/*start estimation on resume*/
+        super.onResume();
+        ARmanager.startEstimation();
+    }
 
     public void onDestroy() {
         super.onDestroy();
