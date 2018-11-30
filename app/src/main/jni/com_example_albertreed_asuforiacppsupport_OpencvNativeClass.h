@@ -33,12 +33,15 @@ int toGray(Mat img, Mat &Gray);
 
 void p(std::string s);
 
+/*Not used but pretty self explanatory*/
 JNIEXPORT jint JNICALL Java_com_example_albertreed_asuforiacppsupport_OpencvNativeClass_convertGray
   (JNIEnv *, jclass, jlong, jlong);
 
+/*Implements the pose estimation problem in C++*/
   JNIEXPORT jobjectArray JNICALL Java_com_example_albertreed_asuforiacppsupport_OpencvNativeClass_nativePoseEstimation
     (JNIEnv *, jclass, jlong, jlong, jlong, jlong, jobjectArray, jobjectArray);
 
+/*Finds reference points and descriptors*/
 JNIEXPORT jobjectArray JNICALL Java_com_example_albertreed_asuforiacppsupport_OpencvNativeClass_getReferencePoints
     (JNIEnv * env, jclass, jlong addrFrame, jlong descriptorsAddr);
 

@@ -43,6 +43,7 @@ public class MainActivity extends AppCompatActivity  implements PoseListener {
         System.loadLibrary("MyOpencvLibs");
     }
 
+    /*Responsible for syncing OpenCV libraries, ideally should be in Asuforia class but it segfaults*/
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
         public void onManagerConnected(int status) {
@@ -65,7 +66,7 @@ public class MainActivity extends AppCompatActivity  implements PoseListener {
 
     asuforia ARmanager;
 
-
+    /*Points to draw a 3D cube*/
     Point3[] model = new Point3[8];
     double[] p1 = {0, 0, 0};
     double[] p2 = {100, 0, 0};
@@ -76,6 +77,7 @@ public class MainActivity extends AppCompatActivity  implements PoseListener {
     double[] p7 = {0, 100, 100};
     double[] p8 = {100, 100, 100};
 
+    /*2D points corresponding to 3D points*/
     Point[] model2D = new Point[16];
 
 
@@ -90,19 +92,21 @@ public class MainActivity extends AppCompatActivity  implements PoseListener {
         cv = (CameraBridgeViewBase) findViewById(R.id.main_activity_java_surface_view);
 
         cv.setVisibility(SurfaceView.VISIBLE);
+
+        /*set up click listener so user can take picture by tapping screen*/
         org.opencv.android.JavaCameraView jcv = (org.opencv.android.JavaCameraView) findViewById(R.id.main_activity_java_surface_view);
         jcv.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 asuforia.getRefImage = true;
             }
         });
+        /*initialize arrays*/
         for(int i = 0; i < model.length; i++) {
             model[i] = new Point3();
         }
         for(int i = 0; i < model2D.length; i++) {
             model2D[i] = new Point();
         }
-        p("before model");
         this.model[0].set(this.p1);
         this.model[1].set(this.p2);
         this.model[2].set(this.p3);
@@ -112,19 +116,18 @@ public class MainActivity extends AppCompatActivity  implements PoseListener {
         this.model[6].set(this.p7);
         this.model[7].set(this.p8);
 
-        p("after model");
-
+        /*start asuforia library by passing in cameraView and 3D model*/
         ARmanager = new asuforia(cv, model);
 
 
-
+        /*Begin estimtation*/
         ARmanager.startEstimation();
     }
-
+    /*callback that returns 2D points for user to draw on frame, points are pose correct*/
+    @Override
     public void onPose(Point[] p, Mat frame)
     {
-        p("hello on pose");
-
+        /*draw 2D points on the screen (This draws a cube)*/
         Imgproc.line(frame, p[0], p[1], new Scalar(255,0,0), 2 );
         Imgproc.line(frame, p[0], p[2], new Scalar(0,255,0), 2 );
         Imgproc.line(frame, p[2], p[3], new Scalar(0,0,255), 2 );

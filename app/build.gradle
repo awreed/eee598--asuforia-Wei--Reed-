@@ -28,7 +28,7 @@ android {
     }
 
     task ndkBuild(type: Exec, description: 'Compile JNI source via NDK') {
-        def ndkDir = "C:/AndroidSDK/ndk-bundle"
+        def ndkDir = "C:/AndroidSDK/ndk-bundle"//need to change this to compile
         commandLine "$ndkDir/ndk-build.cmd",
                 'NDK_PROJECT_PATH=build/intermediates/ndk',
                 'NDK_LIBS_OUT=src/main/jniLibs',
