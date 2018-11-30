@@ -74,6 +74,7 @@ public class asuforia extends AppCompatActivity implements CvCameraViewListener2
     /*User tapped screen, set from callback in mainActivity*/
     public static boolean getRefImage = false;
     private boolean startWhenReady = false;
+    private boolean stopped = false;
 
     Mat frame;
     Mat refImage = null;
@@ -108,10 +109,16 @@ public class asuforia extends AppCompatActivity implements CvCameraViewListener2
             this.keypoints = OpencvNativeClass.getReferencePoints(this.refImage.getNativeObjAddr(), descriptors.getNativeObjAddr());
             this.kpMat.fromArray(keypoints);
             this.estimating = true;
+        } else if(this.stopped == true) {
+            cv.enableView();
+            this.preview = true;
+            this.startWhenReady = true;
+            this.stopped = false;
         } else {
             /*Can't start estimating until user takes reference image*/
             this.startWhenReady = true;
         }
+
     }
     /*Same as Functionality as onImageAvailable()*/
     /*Callback when new frame is ready for processing*/
@@ -156,6 +163,7 @@ public class asuforia extends AppCompatActivity implements CvCameraViewListener2
             this.cv.disableView();//this will call the onCameraViewStopped() callback
         }
         this.estimating = false;
+        this.stopped = true;
     }
 
     /*called when disbleView() is called*/
