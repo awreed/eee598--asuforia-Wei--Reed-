@@ -25,6 +25,9 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.Image;
 import android.os.Bundle;
+import android.Manifest;
+import android.os.Build;
+import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.Surface;
@@ -86,6 +89,12 @@ public class MainActivity extends AppCompatActivity  implements PoseListener {
     public void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {/*request camera permission*/
+            int PERMISSIONS_MULTIPLE_REQUEST=0;
+            ActivityCompat.requestPermissions(this,
+                    new String[]{ Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE },
+                    PERMISSIONS_MULTIPLE_REQUEST);
+        }
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.main_activity_surface_view);
 
