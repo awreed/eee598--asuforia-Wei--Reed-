@@ -172,7 +172,8 @@ int checkPoints(vector<Point2f> &v) {
 }
 
 
-/*This where all the magic happens. Except its broken so actually this is where crap happens*/
+/*This where all the magic happens. Except its broken so actually this is where crap happens.
+Crap that took a very long time to code :)*/
 JNIEXPORT jobjectArray JNICALL Java_com_example_albertreed_asuforiacppsupport_OpencvNativeClass_nativePoseEstimation
     (JNIEnv * env, jclass, jlong addrFrame, jlong refFrame, jlong outFrame, jlong descriptorMat, jobjectArray Javakeypoints, jobjectArray points3D){
      Mat Amat = Mat::zeros(3, 3, CV_64FC1);
